@@ -23,6 +23,11 @@ namespace PokerPolker
 
         IList<Bet> bets = new List<Bet>();
 
+        void SubscribeToPlayer<T>(Player player, Action<T> act) where T : IEvent
+        {
+            domainEvents.Subscribe<T>(p => p.)
+        }
+
         public RoundWithBlinds(Player dealer, IList<Player> playersInOrder, IEventBroker domainEvents)
         {
             this.dealer = dealer;
@@ -31,7 +36,7 @@ namespace PokerPolker
             var dealIndex = playersInOrder.IndexOf(dealer);
             var players = playersInOrder.ShiftLeft(dealIndex + 1);
 
-            var smallBlind = domainEvents.OfType<SmallBlindAdded>().Subscribe(e => {
+            var smallBlind = domainEvents.Subscribe<SmallBlindAdded>(e => {
                     bets.Add(new Bet(e.player, e.v));
             });
             var bigBlind = domainEvents.OfType<BigBlindAdded>().Subscribe(e => {

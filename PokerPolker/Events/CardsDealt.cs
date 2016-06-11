@@ -2,6 +2,11 @@
 
 namespace PokerPolker
 {
+    public interface IPLayerAction : IEvent
+    {
+
+    }
+
     public class RoundStarted : IEvent
     {
         public IList<Player> players;
@@ -12,7 +17,7 @@ namespace PokerPolker
         }
     }
 
-    public class PlayerFolded : IEvent
+    public class PlayerFolded : IPLayerAction
     {
         public Player Player;
 
@@ -22,7 +27,17 @@ namespace PokerPolker
         }
     }
 
-    public class PlayerChecked : IEvent
+    public class PlayerRaised : IPLayerAction
+    {
+        public Player Player;
+
+        public PlayerRaised(Player player)
+        {
+            this.Player = player;
+        }
+    }
+
+    public class PlayerChecked : IPLayerAction
     {
         public Player Player;
 
@@ -32,7 +47,7 @@ namespace PokerPolker
         }
     }
 
-    public class PlayerCalled : IEvent
+    public class PlayerCalled : IPLayerAction
     {
         public Player Player;
         public int v;

@@ -59,12 +59,10 @@
     <Compile Include="DealerCutRound.cs" />
     <Compile Include="Enumerablehelpers.cs" />
     <Compile Include="Events\AllPlayersReady.cs" />
-    <Compile Include="Events\BetPlaced.cs" />
     <Compile Include="GameState.cs" />
     <Compile Include="IEventBroker.cs" />
     <Compile Include="PlayingCards\Card.cs" />
     <Compile Include="Events\CardsDealt.cs" />
-    <Compile Include="Events\Check.cs" />
     <Compile Include="Class1.cs" />
     <Compile Include="Events\DealerCardSplit.cs" />
     <Compile Include="PlayingCards\Deck.cs" />

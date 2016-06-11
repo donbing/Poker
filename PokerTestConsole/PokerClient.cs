@@ -22,6 +22,13 @@ namespace PokerTestConsole
             this.Events.Subscribe<AllPlayersReady>(CutDeck);
             this.Events.Subscribe<RoundStarted>(RoundStartedUp);
             this.Events.Subscribe<PlayerCardsDealt>(PlayerCardsOut);
+            this.Events.Subscribe<IPLayerAction>(PlayerActionTaken);
+        }
+
+        private void PlayerActionTaken(IPLayerAction arg)
+        {
+            // check if its our move?
+
         }
 
         void PlayerCardsOut(PlayerCardsDealt obj)
