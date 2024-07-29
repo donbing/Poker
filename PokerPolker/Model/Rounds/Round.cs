@@ -47,6 +47,7 @@ public class Round : IRound
 
         Subscribe<PlayerCalled>(e =>
         {
+            // todo: prevent game advance before these situations
             if (e.Player != currentPlayer)
             {
                 domainEvents.Publish(new PlayerPlayedOutOfTurn(e.Player));

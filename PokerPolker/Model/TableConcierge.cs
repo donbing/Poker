@@ -10,54 +10,60 @@ namespace PokerPolker.Model;
 
 public class TableConcierge
 {
-    readonly ObservableCollection<Guid> reservedSeats;
-    readonly CompositeDisposable subscriptions = new();
-    readonly ConcurrentDictionary<int, Player> playerSeatingPositions = new();
+    readonly ObservableCollection<Guid> reservableSeats;
+    readonly CompositeDisposable d = new();
+    readonly ConcurrentDictionary<int, Player> seatedPlayers = new();
     readonly HashSet<Player> readyPlayers = new();
 
     public IEnumerable<Player> Players =>
-        playerSeatingPositions
+        seatedPlayers
             .OrderBy(x => x.Key)
             .Select(x => x.Value);
 
-    public TableConcierge(IEventBroker domainEvents, int minPlayers = 3, int maxPlayers = 10)
+    public TableConcierge(IEventBroker gameEvents, int minPlayers = 3, int maxPlayers = 10)
     {
-        reservedSeats = new ObservableCollection<Guid>(new List<Guid>(maxPlayers));
-        subscriptions.Add(domainEvents.Subscribe<SeatRequested>(p =>
-        {
-            if (p.SeatPosition.HasValue &&
-                p.SeatPosition.Value < reservedSeats.Count &&
-                reservedSeats[p.SeatPosition.Value] != default)
-            {
-                reservedSeats.Insert(p.SeatPosition.Value, p.ClientId);
-            }
-            else
-            {
-                reservedSeats.Add(p.ClientId);
-            }
+        reservableSeats = new ObservableCollection<Guid>(new List<Guid>(maxPlayers));
 
-            domainEvents.Publish(new SeatReserved(p.ClientId, reservedSeats.IndexOf(p.ClientId)));
+        d.Add(gameEvents.Subscribe<NextFreeSeatRequested>(p =>
+        {
+            reservableSeats.Add(p.ClientId);
+            gameEvents.Publish(new SeatReserved(p.ClientId, reservableSeats.IndexOf(p.ClientId)));
         }));
 
-        subscriptions.Add(domainEvents.Subscribe<ClaimSeatReservation>(e =>
+        d.Add(gameEvents.Subscribe<SpecificSeatRequested>(requested =>
         {
-            if (!reservedSeats.Contains(e.ClientId))
+            var seatIsNotFree = requested.SeatPosition >= maxPlayers
+                             || requested.SeatPosition < 0
+                             || reservableSeats.ElementAtOrDefault(requested.SeatPosition) != default;
+            if (seatIsNotFree)
             {
-                domainEvents.Publish(new ReservationNotFound(e.ClientId));
+                gameEvents.Publish(new SeatReservationRefused(requested.ClientId, requested.SeatPosition));
+                return;
+            }
+
+            reservableSeats.Insert(requested.SeatPosition, requested.ClientId);
+            gameEvents.Publish(new SeatReserved(requested.ClientId, requested.SeatPosition));
+        }));
+
+        d.Add(gameEvents.Subscribe<ClaimSeatReservation>(e =>
+        {
+            if (!reservableSeats.Contains(e.ClientId))
+            {
+                gameEvents.Publish(new ReservationNotFound(e.ClientId));
             }
             else if (Players.Any(x => x.Name == e.PlayerName))
             {
-                domainEvents.Publish(new PlayerNameRefused(e.ClientId, reservedSeats.IndexOf(e.ClientId)));
+                gameEvents.Publish(new PlayerNameRefused(e.ClientId, reservableSeats.IndexOf(e.ClientId)));
             }
             else
             {
-                var player = playerSeatingPositions[reservedSeats.IndexOf(e.ClientId)] = new Player(e.PlayerName);
+                var player = seatedPlayers[reservableSeats.IndexOf(e.ClientId)] = new Player(e.PlayerName);
 
-                domainEvents.Publish(new PlayerAddedToGame(e.ClientId, player));
+                gameEvents.Publish(new PlayerAddedToGame(e.ClientId, player));
             }
         }));
 
-        subscriptions.Add(domainEvents.Subscribe<PlayerReady>(p =>
+        d.Add(gameEvents.Subscribe<PlayerReady>(p =>
         {
             if (Players.Contains(p.Player))
             {
@@ -66,11 +72,12 @@ public class TableConcierge
 
             if (readyPlayers.Count >= minPlayers && readyPlayers.Count == Players.Count())
             {
-                domainEvents.Publish(new AllPlayersReady());
+                gameEvents.Publish(new AllPlayersReady());
+                Dispose();
             }
         }));
     }
 
     public void Dispose() => 
-        subscriptions.Dispose();
+        d.Dispose();
 }

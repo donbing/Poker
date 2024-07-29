@@ -7,6 +7,7 @@
     <ImportWindowsDesktopTargets>true</ImportWindowsDesktopTargets>
   </PropertyGroup>
   <ItemGroup>
+    <ProjectReference Include="..\PokerPolker.Client\PokerPolker.Client.csproj" />
     <ProjectReference Include="..\PokerPolker\PokerPolker.csproj" />
   </ItemGroup>
   <ItemGroup>

@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Reactive.Linq;
+using PokerPolker.Events;
 using PokerPolker.Events.BettingRounds;
 using PokerPolker.Events.GameStart;
 using PokerPolker.Model.Rounds;
@@ -17,12 +19,9 @@ namespace PokerPolker.Model
             Events = domainEvents;
 
             var concierge = new TableConcierge(domainEvents);
-
+            // todo: disposes!
             var cutForDealerWhenAllPlayersReady = domainEvents.Subscribe<AllPlayersReady>(p =>
             {
-                Console.WriteLine(Environment.NewLine);
-                // move this to concierge?
-                concierge.Dispose();
                 var dealerCutRound = new CutForDealerRound(concierge.Players.ToList(), domainEvents);
                 rounds.Add(dealerCutRound);
             });

@@ -1,4 +1,6 @@
 ﻿using System.Reactive.Subjects;
+using System.Security.Cryptography.X509Certificates;
+using PokerPolker.Client;
 using PokerPolker.Events;
 using PokerPolker.Events.BettingRounds;
 using PokerPolker.Events.GameStart;
@@ -14,53 +16,53 @@ namespace PokerTestConsole
 
         static void Main()
         {
-            var domainEvents = new Subject<IEvent>();
+            var gameEvents = new Subject<IEvent>();
 
-            EventReporter.WriteEventsToConsole(domainEvents);
+            EventReporter.WriteEventsToConsole(gameEvents);
 
-            var eventBroker = new EventBroker(domainEvents);
+            var eventBroker = new MemoryEventBroker(gameEvents);
             var prog = new PokerGame(eventBroker);
 
             var bobBotClient = new BotPokerClient(deck, eventBroker, "bob");
-            bobBotClient.JoinGame(prog);
+            bobBotClient.JoinGameAtSeat(0);
 
             var daveBotClient = new BotPokerClient(deck, eventBroker, "dave");
-            daveBotClient.JoinGame(prog);
+            daveBotClient.JoinGameAtSeat(1);
 
             var realPlayerClient = new PokerClient(deck, eventBroker);
-            realPlayerClient.JoinGame(prog);
+            realPlayerClient.JoinGameAtSeat(2);
 
             while (true)
             {
-                // pause for events
+                // todont: do this
             }
         }
 
-        static void PlayExample3PlayerGame(Subject<IEvent> domainEvents)
+        static void PlayExample3PlayerGame(Subject<IEvent> gameEvents)
         {
             var russ = new Player("Russ");
             var chris = new Player("Chris");
             var jak = new Player("Jak");
 
-            domainEvents.OnNext(new PlayerReady(russ));
-            domainEvents.OnNext(new PlayerReady(chris));
-            domainEvents.OnNext(new PlayerReady(jak));
+            gameEvents.OnNext(new PlayerReady(russ));
+            gameEvents.OnNext(new PlayerReady(chris));
+            gameEvents.OnNext(new PlayerReady(jak));
 
-            domainEvents.OnNext(new AllPlayersReady());
+            gameEvents.OnNext(new AllPlayersReady());
 
-            domainEvents.OnNext(new PlayerCutTheDeck(russ, deck.QueenOfSpades));
-            domainEvents.OnNext(new PlayerCutTheDeck(chris, deck.KingOfSpades));
-            domainEvents.OnNext(new PlayerCutTheDeck(jak, deck.AceOfSpades));
+            gameEvents.OnNext(new PlayerCutTheDeck(russ, deck.QueenOfSpades));
+            gameEvents.OnNext(new PlayerCutTheDeck(chris, deck.KingOfSpades));
+            gameEvents.OnNext(new PlayerCutTheDeck(jak, deck.AceOfSpades));
 
-            domainEvents.OnNext(new SmallBlindAdded(russ, 10));
-            domainEvents.OnNext(new BigBlindAdded(chris, 20));
-            domainEvents.OnNext(new PlayerCardsDealt());
+            gameEvents.OnNext(new SmallBlindAdded(russ, 10));
+            gameEvents.OnNext(new BigBlindAdded(chris, 20));
+            gameEvents.OnNext(new PlayerCardsDealt());
 
-            domainEvents.OnNext(new PlayerCalled(jak, 20));
-            domainEvents.OnNext(new PlayerCalled(russ, 10));
-            domainEvents.OnNext(new PlayerChecked(chris));
+            gameEvents.OnNext(new PlayerCalled(jak, 20));
+            gameEvents.OnNext(new PlayerCalled(russ, 10));
+            gameEvents.OnNext(new PlayerChecked(chris));
 
-            domainEvents.OnNext(new FlopDealt());
+            gameEvents.OnNext(new FlopDealt());
         }
     }
 }

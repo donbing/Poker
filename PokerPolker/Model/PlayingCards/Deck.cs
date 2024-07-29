@@ -53,6 +53,7 @@ namespace PokerPolker.Model.PlayingCards
     {
         private readonly IList<Card> cards = cards.ToList();
 
+        // todo: 
         public Card AceOfSpades =>
             cards.Single(c => c.Matches(Suit.Spades, CardValue.Ace));
 

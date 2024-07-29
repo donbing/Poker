@@ -1,20 +1,16 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <OutputType>Exe</OutputType>
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Docker.DotNet" Version="3.125.15" />
     <PackageReference Include="MQTTnet" Version="4.3.6.1152" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\PokerPolker.Client\PokerPolker.Client.csproj" />
-    <ProjectReference Include="..\PokerPolker.EventBroker\PokerPolker.EventBroker.csproj" />
     <ProjectReference Include="..\PokerPolker\PokerPolker.csproj" />
   </ItemGroup>
 

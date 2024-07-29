@@ -1,4 +1,4 @@
-Microsoft Visual Studio Solution File, Format Version 12.00
+﻿Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.8.34330.188
 MinimumVisualStudioVersion = 10.0.40219.1
@@ -7,6 +7,10 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PokerTestConsole", "PokerTestConsole\PokerTestConsole.csproj", "{5C0E16D3-421A-44F1-9088-5FD7CDA514C9}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PokerPolker.Server", "PokerPolker.Server\PokerPolker.Server.csproj", "{5E5BCD4B-0DE9-4847-B5C6-3F31CC21DD9B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PokerPolker.Client", "PokerPolker.Client\PokerPolker.Client.csproj", "{68940746-4AEF-400F-8A3B-AF2CA7920897}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PokerPolker.EventBroker", "PokerPolker.EventBroker\PokerPolker.EventBroker.csproj", "{8C2830AD-56B6-4F0B-9721-1883FC276641}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -26,6 +30,14 @@ Global
 		{5E5BCD4B-0DE9-4847-B5C6-3F31CC21DD9B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5E5BCD4B-0DE9-4847-B5C6-3F31CC21DD9B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5E5BCD4B-0DE9-4847-B5C6-3F31CC21DD9B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{68940746-4AEF-400F-8A3B-AF2CA7920897}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{68940746-4AEF-400F-8A3B-AF2CA7920897}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{68940746-4AEF-400F-8A3B-AF2CA7920897}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{68940746-4AEF-400F-8A3B-AF2CA7920897}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8C2830AD-56B6-4F0B-9721-1883FC276641}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8C2830AD-56B6-4F0B-9721-1883FC276641}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8C2830AD-56B6-4F0B-9721-1883FC276641}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8C2830AD-56B6-4F0B-9721-1883FC276641}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
