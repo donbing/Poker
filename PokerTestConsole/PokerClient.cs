@@ -1,80 +1,140 @@
 ﻿using System;
-using PokerPolker;
+using PokerPolker.Events.BettingRounds;
+using PokerPolker.Events.GameStart;
+using PokerPolker.Model;
+using PokerPolker.Model.PlayingCards;
 
 namespace PokerTestConsole
 {
     public class PokerClient
     {
         readonly Deck deck;
+
         protected readonly IEventBroker Events;
         protected readonly Guid ClientId = Guid.NewGuid();
         protected Player player;
-        bool wasSmall,wasBig,hasBet;
+
         public PokerClient(Deck deck, IEventBroker events)
         {
             this.deck = deck;
-            this.Events = events;
-            this.Events.Publish(new SeatRequested(ClientId));
-            this.Events.Subscribe<SeatReserved>(e => e.ClientId == ClientId, ConfirmPlayerName);
-            this.Events.Subscribe<PlayerAdded>(e => e.ClientId == ClientId, PlayerNameConfimred);
-            this.Events.Subscribe<ReservationNotFound>(e => e.ClientId == ClientId, BadReservanio);
-            this.Events.Subscribe<PlayerNameRefused>(e => e.ClientId == ClientId, SetUserNameAgain);
-            this.Events.Subscribe<AllPlayersReady>(CutDeck);
-            this.Events.Subscribe<RoundStarted>(RoundStartedUp);
-            this.Events.Subscribe<PlayerCardsDealt>(PlayerCardsOut);
-            this.Events.Subscribe<IPLayerAction>(PlayerActionTaken);
+            Events = events;
+            
+            // setup
+            Events.Subscribe<SeatReserved>(e => e.ClientId == ClientId, ConfirmPlayerName);
+            Events.Subscribe<PlayerAddedToGame>(e => e.ClientId == ClientId, PlayerNameConfirmed);
+            Events.Subscribe<ReservationNotFound>(e => e.ClientId == ClientId, BadReservation);
+            Events.Subscribe<PlayerNameRefused>(e => e.ClientId == ClientId, SetUserNameAgain);
+
+            // dealer selection
+            Events.Subscribe<PlayerCutRequired>(CutDeck);
+
+            // first betting round
+            Events.Subscribe<PlayerCardsRequired>(DealPlayerCardsIfDealer);
+            Events.Subscribe<BetExpected>(SelectBettingStrategy);
+            Events.Subscribe<SmallBlindExpected>(AddSmallBlind);
+            Events.Subscribe<BigBlindExpected>(AddBigBlind);
+            Events.Subscribe<FlopExpected>(DealFlop);
+            Events.Subscribe<TurnCardExpected>(DealTurnCard);
+            Events.Subscribe<RiverCardExpected>(DealTurnRiverCard);
         }
 
-        private void PlayerActionTaken(IPLayerAction arg)
+        private void DealTurnRiverCard(RiverCardExpected obj)
         {
-            // check if its our move?
-
-        }
-
-        void PlayerCardsOut(PlayerCardsDealt obj)
-        {
-            if (wasSmall)// or current bet is to little, or we can check
+            if (obj.Dealer == player)
             {
-                Events.Publish(new PlayerCalled(10, player));
+                Events.Publish(new RiverCardDealt());
             }
-            else if (wasBig)
+        }
+
+        private void DealTurnCard(TurnCardExpected obj)
+        {
+            if (obj.Dealer == player)
             {
-                Events.Publish(new PlayerChecked(player));
+                Events.Publish(new TurnCardDealt());
+            }
+        }
+
+        private void DealFlop(FlopExpected obj)
+        {
+            if (obj.Dealer == player)
+            {
+                Events.Publish(new FlopDealt());
+            }
+        }
+
+        private void AddBigBlind(BigBlindExpected obj)
+        {
+            if (obj.Player == player)
+            {
+                Events.Publish(new BigBlindAdded(player, obj.Amount));
+            }
+        }
+
+        private void AddSmallBlind(SmallBlindExpected obj)
+        {
+            if (obj.Player == player)
+            {
+                Events.Publish(new SmallBlindAdded(player, obj.Amount));
+            }
+        }
+
+        private void SelectBettingStrategy(BetExpected obj)
+        {
+            if (obj.Player != player)
+            {
+                return;
+            }
+
+            if (obj.MinBet == 0)
+            {
+                if (new Random().Next(1, 3) == 1)
+                {
+                    Events.Publish(new PlayerRaised(player, 20));
+                }
+                else
+                {
+                    Events.Publish(new PlayerChecked(player));
+                }
+            }
+            else if (new Random().Next(1, 3) == 1)
+            {
+                Events.Publish(new PlayerFolded(player));
+            }
+            else if (new Random().Next(1, 3) == 1)
+            {
+                Events.Publish(new PlayerRaised(player, obj.MinBet + 20));
             }
             else
             {
-                Events.Publish(new PlayerCalled(20, player));
+                Events.Publish(new PlayerCalled(player, obj.MinBet));
             }
         }
 
-        void RoundStartedUp(RoundStarted obj)
+        private void DealPlayerCardsIfDealer(PlayerCardsRequired obj)
         {
-            if (obj.players.IndexOf(player) == 0)
+            if (obj.Dealer == player)
             {
-                Events.Publish(new SmallBlindAdded(10, player));
-                wasSmall = true;
-            }
-            else if (obj.players.IndexOf(player) == 1)
-            {
-                Events.Publish(new BigBlindAdded(20, player));
-                wasBig = true;
+                Events.Publish(new PlayerCardsDealt());
             }
         }
 
-        void CutDeck(AllPlayersReady obj)
+        void CutDeck(PlayerCutRequired @event)
         {
-            Events.Publish(new DealerCardCut(player, deck.PopRandom()));
+            if (@event.Player == player)
+            {
+                Events.Publish(new PlayerCutTheDeck(player, deck.PopRandom()));
+            }
         }
 
-        protected virtual void PlayerNameConfimred(PlayerAdded obj)
+        protected virtual void PlayerNameConfirmed(PlayerAddedToGame obj)
         {
             player = obj.Player;
-            Console.WriteLine("Press any key when ready.");
-            Console.ReadKey();
+            Console.WriteLine($"Game joined as {obj.Player.Name}: press any key when ready.");
+            //Console.ReadKey();
             Events.Publish(new PlayerReady(player));
         }
 
-        protected virtual void BadReservanio(ReservationNotFound obj)
+        protected virtual void BadReservation(ReservationNotFound obj)
         {
             Console.WriteLine("server seems to have forgotten about us :(, please restart and try again");
         }
@@ -83,36 +143,22 @@ namespace PokerTestConsole
         {
             Console.WriteLine("that name is taken!");
             Console.WriteLine("Please Enter your player name");
-            var name = Console.ReadLine();
-            Events.Publish(new AddPlayer(ClientId, name));
+            var name = "chris";
+            Events.Publish(new ClaimSeatReservation(ClientId, name, obj.SeatPosition));
         }
 
         protected virtual void ConfirmPlayerName(SeatReserved obj)
         {
             Console.WriteLine($"you are in seat {obj.SeatPosition}");
             Console.WriteLine("Please Enter your player name");
-            var name = Console.ReadLine();
-            Events.Publish(new AddPlayer(ClientId, name));
+            var name = "chris1";
+            Events.Publish(new ClaimSeatReservation(ClientId, name, obj.SeatPosition));
         }
 
-        public class BotPokerClient : PokerClient
+        public void JoinGame(PokerGame prog)
         {
-            readonly string botName;
-
-            public BotPokerClient(Deck deck, IEventBroker events, string botName) : base(deck, events)
-            {
-                this.botName = botName;
-            }
-
-            protected override void PlayerNameConfimred(PlayerAdded obj)
-            {
-                player = obj.Player;
-                Events.Publish(new PlayerReady(obj.Player));
-            }
-            protected override void BadReservanio(ReservationNotFound obj) { }
-            protected override void ConfirmPlayerName(SeatReserved obj) => Events.Publish(new AddPlayer(ClientId, botName));
-            protected override void SetUserNameAgain(PlayerNameRefused obj) => Events.Publish(new AddPlayer(ClientId, botName));
+            var seatPosition = 1;
+            prog.Events.Publish(new SeatRequested(ClientId, seatPosition));
         }
-
     }
 }

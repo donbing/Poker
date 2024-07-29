@@ -1,9 +1,10 @@
-﻿using PokerPolker;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reactive.Subjects;
-using System.Windows.Forms;
+﻿using System.Reactive.Subjects;
+using PokerPolker.Events;
+using PokerPolker.Events.BettingRounds;
+using PokerPolker.Events.GameStart;
+using PokerPolker.Model;
+using PokerPolker.Model.PlayingCards;
+using PokerTestConsole.EventStore;
 
 namespace PokerTestConsole
 {
@@ -11,7 +12,7 @@ namespace PokerTestConsole
     {
         public static readonly Deck deck = Suit.CreateDeck();
 
-        static void Main(string[] args)
+        static void Main()
         {
             var domainEvents = new Subject<IEvent>();
 
@@ -20,13 +21,18 @@ namespace PokerTestConsole
             var eventBroker = new EventBroker(domainEvents);
             var prog = new PokerGame(eventBroker);
 
-            var bobBotClient = new PokerClient.BotPokerClient(deck, eventBroker, "bob");
-            var daveBotClient = new PokerClient.BotPokerClient(deck, eventBroker, "dave");
+            var bobBotClient = new BotPokerClient(deck, eventBroker, "bob");
+            bobBotClient.JoinGame(prog);
+
+            var daveBotClient = new BotPokerClient(deck, eventBroker, "dave");
+            daveBotClient.JoinGame(prog);
+
             var realPlayerClient = new PokerClient(deck, eventBroker);
-            
+            realPlayerClient.JoinGame(prog);
+
             while (true)
             {
-                // dinada
+                // pause for events
             }
         }
 
@@ -42,16 +48,16 @@ namespace PokerTestConsole
 
             domainEvents.OnNext(new AllPlayersReady());
 
-            domainEvents.OnNext(new DealerCardCut(russ, deck.QueenOfSpades));
-            domainEvents.OnNext(new DealerCardCut(chris, deck.KingOfSpades));
-            domainEvents.OnNext(new DealerCardCut(jak, deck.AceOfSpades));
+            domainEvents.OnNext(new PlayerCutTheDeck(russ, deck.QueenOfSpades));
+            domainEvents.OnNext(new PlayerCutTheDeck(chris, deck.KingOfSpades));
+            domainEvents.OnNext(new PlayerCutTheDeck(jak, deck.AceOfSpades));
 
-            domainEvents.OnNext(new SmallBlindAdded(10, russ));
-            domainEvents.OnNext(new BigBlindAdded(20, chris));
+            domainEvents.OnNext(new SmallBlindAdded(russ, 10));
+            domainEvents.OnNext(new BigBlindAdded(chris, 20));
             domainEvents.OnNext(new PlayerCardsDealt());
 
-            domainEvents.OnNext(new PlayerCalled(20, jak));
-            domainEvents.OnNext(new PlayerCalled(10, russ));
+            domainEvents.OnNext(new PlayerCalled(jak, 20));
+            domainEvents.OnNext(new PlayerCalled(russ, 10));
             domainEvents.OnNext(new PlayerChecked(chris));
 
             domainEvents.OnNext(new FlopDealt());

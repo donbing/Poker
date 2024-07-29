@@ -1,0 +1,11 @@
+@PokerServer_HostAddress = http://localhost:5051
+
+GET {{PokerServer_HostAddress}}/todos/
+Accept: application/json
+
+###
+
+GET {{PokerServer_HostAddress}}/todos/1
+Accept: application/json
+
+###
